@@ -1,8 +1,16 @@
+Print[
+"MPG Bootstrapper 0.1
+********************"
+]
+
 (* Check for already installed MPG *)
+Print["Checking for existing MPG installation."]
 
 (* Download if not *)
+Print["Downloading latest MPG package."]
 
 (* Put path settings in init.m *)
+Print["Updating Kernel/init.m with MPG locations."]
 
 Module[{breakExpressions,safeFileReplace,writeTempFile,initFileName,initLines,initExpressions,tempName},
   mpgLoaderString = "Module[{mpgLoader},
@@ -54,3 +62,8 @@ Print[\"MPG hooks installed.\"]]
   safeFileReplace[tempName,initFileName];
 
 ]
+
+Print["
+MPG successfully bootstrapped.
+
+Run Mpg`Help[] for more info."]
