@@ -39,9 +39,9 @@ Print[\"MPG hooks installed.\"]]
      If[MatchQ[
      Quiet[
        Check[ToExpression[expr, InputForm, Hold],
-       Null,
-       {ToExpression::sntxi, ToExpression::sntx}],
-       {ToExpression::sntx, ToExpression::sntxi}],
+        Null,
+        {Syntax::com, ToExpression::sntx, ToExpression::sntxi}],
+      {Syntax::com, ToExpression::sntx, ToExpression::sntxi}],
      Null],
      breakExpressions[lines, exprs, expr],
      breakExpressions[lines, {exprs, expr}, ""]]];
@@ -65,5 +65,4 @@ Print[\"MPG hooks installed.\"]]
 
 Print["
 MPG successfully bootstrapped.
-
 Run Mpg`Help[] for more info."]
