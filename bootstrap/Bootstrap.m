@@ -1,21 +1,76 @@
 Print[
-"MPG Bootstrapper 0.1
+"Mpg Bootstrapper 0.1
 ********************"
 ]
 
-(* Check for already installed MPG *)
-Print["Checking for existing MPG installation."]
+(* If user sets $MpgDirectory before running the bootstrapper, the
+   bootstrapper will honor their setting, and preserve it over time. *)
+If[!ValueQ[$MpgDirectory],$MpgDirectory = FileNameJoin[{$UserBaseDirectory,"Mpg"}]]
+
+(* Check for already installed Mpg *)
+Print["Checking for existing Mpg installation."]
 
 (* Download if not *)
-Print["Downloading latest MPG package."]
+Print["Downloading latest Mpg package."]
+
+(* TODO: For Mathematica 9 and up, should use the built in URLSave.
+         Meanwhile, JLink on all versions for back compat. *)
+Module[{getURL,
+        tempZip,
+        zipFiles,
+        mpgPackageUrl = "https://github.com/mathematica-packages/mpg/zipball/stable"},
+  Needs["JLink`"];
+  getURL[url_String, directory_String] :=
+   JLink`JavaBlock[
+    Module[{u, conn, filenameHeader, outFileName, stream, numRead,
+      outFile, buf}, JLink`InstallJava[];
+     u = JLink`JavaNew["java.net.URL", url];
+     conn = u@openConnection[];
+     If[conn === $Failed, Return[$Failed]];
+     filenameHeader = conn@getHeaderField["Content-Disposition"];
+     If[! FileExistsQ[directory], CreateDirectory[directory]];
+     outFileName =
+      FileNameJoin[{directory,
+        StringCases[filenameHeader, "filename=" ~~ p : __ :> p][[1]]}];
+     stream = conn@getInputStream[];
+     If[stream === $Failed, Return[$Failed]];
+     outFile = OpenWrite[outFileName, BinaryFormat -> True];
+     buf = JLink`JavaNew["[B",
+       5000];(*5000 is an arbitrary buffer size.*)
+     While[(numRead = stream@read[buf]) > 0,
+      BinaryWrite[outFile, Take[Mod[JLink`Val[buf], 256], numRead]]];
+     stream@close[];
+     Close[outFile]   (*Close returns the filename.*)]];
+
+  tempZip = getURL[mpgPackageUrl,
+    FileNameJoin[{$MpgDirectory, "Cache"}]];
+
+  If[tempZip === $Failed,Print["Failed to fetch latest Mpg package from "<> mpgPackageUrl <>"."]];
+
+  zipFiles = Import[tempZip];
+
+]
 
 (* Put path settings in init.m *)
-Print["Updating Kernel/init.m with MPG locations."]
+Print["Updating Kernel/init.m with Mpg locations."]
 
-Module[{breakExpressions,safeFileReplace,writeTempFile,initFileName,initLines,initExpressions,tempName},
+Module[{mpgDirString,
+        mpgLoaderString,
+        safeFileReplace,
+        writeTempFile,
+        breakExpressions,
+        initFileName,
+        initLines,
+        initExpressions,
+        tempName},
+
+  If[$MpgDirectory===FileNameJoin[{$UserBaseDirectory,"Mpg"}],
+    mpgDirString="FileNameJoin[{$UserBaseDirectory,\"Mpg\"}]",
+    mpgDirString="\""<>StringReplace[$MpgDirectory,"\\"->"\\\\"]<>"\""];
   mpgLoaderString = "Module[{mpgLoader},
 (* This module is managed by MPG--edits get silently overwritten. *)
-Print[\"MPG hooks installed.\"]]
+"<>"$MpgDirectory = " <> mpgDirString <> ";
+]
 ";
   safeFileReplace[from_, to_] :=
    Module[{tempSuffix = ".tmp" <> ToString[RandomInteger[100000000]]},
@@ -64,5 +119,5 @@ Print[\"MPG hooks installed.\"]]
 ]
 
 Print["
-MPG successfully bootstrapped.
+Mpg successfully bootstrapped.
 Run Mpg`Help[] for more info."]
