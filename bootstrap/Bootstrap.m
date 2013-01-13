@@ -1,17 +1,21 @@
 Print[
 "Mpg Bootstrapper 0.1
 ********************"
-]
+];
 
 (* If user sets $MpgDirectory before running the bootstrapper, the
    bootstrapper will honor their setting, and preserve it over time. *)
-If[!ValueQ[$MpgDirectory],$MpgDirectory = FileNameJoin[{$UserBaseDirectory,"Mpg"}]]
+If[!ValueQ[$MpgDirectory],$MpgDirectory = FileNameJoin[{$UserBaseDirectory,"Mpg"}]];
 
 (* Check for already installed Mpg *)
-Print["Checking for existing Mpg installation."]
+Print["Checking for existing Mpg installation."];
+
+Catch[
+
+If[Quiet[Needs["Mpg`"]] =!= $Failed, Print["Yippee! You already have Mpg."]; Throw[""]];
 
 (* Download if not *)
-Print["Downloading latest Mpg package."]
+Print["Downloading latest Mpg package."];
 
 (* TODO: For Mathematica 9 and up, should use the built in URLSave.
          Meanwhile, JLink on all versions for back compat. *)
@@ -49,10 +53,10 @@ Module[{getURL,
 
   zipFiles = Import[tempZip];
 
-]
+];
 
 (* Put path settings in init.m *)
-Print["Updating Kernel/init.m with Mpg locations."]
+Print["Updating Kernel/init.m with Mpg locations."];
 
 Module[{mpgDirString,
         mpgLoaderString,
@@ -70,6 +74,7 @@ Module[{mpgDirString,
   mpgLoaderString = "Module[{mpgLoader},
 (* This module is managed by MPG--edits get silently overwritten. *)
 "<>"$MpgDirectory = " <> mpgDirString <> ";
+AppendTo[$Path,FileNameJoin[{$MpgDirectory,\"Active\"}]];
 ]
 ";
   safeFileReplace[from_, to_] :=
@@ -116,8 +121,10 @@ Module[{mpgDirString,
 
   safeFileReplace[tempName,initFileName];
 
-]
+];
+
+];
 
 Print["
 Mpg successfully bootstrapped.
-Run Mpg`Help[] for more info."]
+Run Mpg`Help[] for more info."];
