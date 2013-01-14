@@ -20,9 +20,11 @@ Print["Downloading latest Mpg package."];
 (* TODO: For Mathematica 9 and up, should use the built in URLSave.
          Meanwhile, JLink on all versions for back compat. *)
 Module[{getURL,
+        safeDirectoryReplace,
         tempZip,
         zipFiles,
-        mpgPackageUrl = "https://github.com/mathematica-packages/mpg/zipball/stable"},
+        mpgPackageUrl = "https://github.com/mathematica-packages/mpg/zipball/stable",
+        archiveDirectory},
   Needs["JLink`"];
   getURL[url_String, directory_String] :=
    JLink`JavaBlock[
@@ -46,13 +48,24 @@ Module[{getURL,
      stream@close[];
      Close[outFile]   (*Close returns the filename.*)]];
 
+  safeDirectoryReplace[from_,to_] :=
+    Module[{tempSuffix = ".tmp" <> ToString[RandomInteger[100000000]]},
+    If[!FileExistsQ[from], Message[safeDirectoryReplace::missing],
+     If[FileExistsQ[to], RenameDirectory[to, to <> tempSuffix];
+      CopyDirectory[from, to]; DeleteDirectory[to <> tempSuffix,DeleteContents->True]; to,
+      CopyDirectory[from, to]]]];
+
   tempZip = getURL[mpgPackageUrl,
     FileNameJoin[{$MpgDirectory, "Cache"}]];
 
   If[tempZip === $Failed,Print["Failed to fetch latest Mpg package from "<> mpgPackageUrl <>"."]];
 
-  zipFiles = Import[tempZip];
-
+  (* This only works in Mathematica 8.0 and up. Need to consider
+     our options for downlevel here... *)
+  archiveDirectory = ExtractArchive[tempZip,FileNameJoin[{$MpgDirectory,"Cache"}]][[1]];
+  metaData = Import[FileNameJoin[{archiveDirectory,"MpgMeta.m"}]];
+  safeDirectoryReplace[FileNameJoin[{archiveDirectory,"Mpg"}],FileNameJoin[{$MpgDirectory,"Active","Mpg"}]];
+  DeleteDirectory[archiveDirectory,DeleteContents->True];
 ];
 
 (* Put path settings in init.m *)
@@ -72,7 +85,8 @@ Module[{mpgDirString,
     mpgDirString="FileNameJoin[{$UserBaseDirectory,\"Mpg\"}]",
     mpgDirString="\""<>StringReplace[$MpgDirectory,"\\"->"\\\\"]<>"\""];
   mpgLoaderString = "Module[{mpgLoader},
-(* This module is managed by MPG--edits get silently overwritten. *)
+(* This module is managed by Mpg.
+   Edits may get silently overwritten. *)
 "<>"$MpgDirectory = " <> mpgDirString <> ";
 AppendTo[$Path,FileNameJoin[{$MpgDirectory,\"Active\"}]];
 ]
