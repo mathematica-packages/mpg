@@ -144,7 +144,8 @@ Import[\"https://j.mp/needs-mpg\"] :=
 
   safeFileReplace[tempName,initFileName];
 
-  ToExpression[mpgLoaderString];
+  Evaluate[ToExpression[mpgLoaderString]];
+  Needs["Mpg`"];
   ];
 
 ];
