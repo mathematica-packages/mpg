@@ -55,6 +55,9 @@ Module[{getURL,
       CopyDirectory[from, to]; DeleteDirectory[to <> tempSuffix,DeleteContents->True]; to,
       CopyDirectory[from, to]]]];
 
+  CreateDirectory[FileNameJoin[{$MpgDirectory, "Cache"}], CreateIntermediateDirectories->True];
+  CreateDirectory[FileNameJoin[{$MpgDirectory, "Active"}], CreateIntermediateDirectories->True];
+
   tempZip = getURL[mpgPackageUrl,
     FileNameJoin[{$MpgDirectory, "Cache"}]];
 
