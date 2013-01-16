@@ -1,5 +1,5 @@
 Print[
-"Mpg Bootstrapper 0.1
+"Mpg Bootstrapper 0.2
 ********************"
 ];
 
@@ -89,6 +89,12 @@ Module[{mpgDirString,
    Edits may get silently overwritten. *)
 "<>"$MpgDirectory = " <> mpgDirString <> ";
 AppendTo[$Path,FileNameJoin[{$MpgDirectory,\"Active\"}]];
+Unprotect[Import];
+Import[\"https://j.mp/needs-mpg\"] :=
+ Quiet[Check[Needs[\"Mpg`\"], Unprotect[Import];
+   Import[\"https://j.mp/needs-mpg\"] =.; Protect[Import];
+   Import[\"https://j.mp/needs-mpg\"], {Needs::nocont}], {Get::noopen,
+   Needs::nocont}]; Protect[Import]
 ]
 ";
   safeFileReplace[from_, to_] :=
