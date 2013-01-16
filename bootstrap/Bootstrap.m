@@ -94,7 +94,7 @@ Import[\"https://j.mp/needs-mpg\"] :=
  Quiet[Check[Needs[\"Mpg`\"], Unprotect[Import];
    Import[\"https://j.mp/needs-mpg\"] =.; Protect[Import];
    Import[\"https://j.mp/needs-mpg\"], {Needs::nocont}], {Get::noopen,
-   Needs::nocont}]; Protect[Import]
+   Needs::nocont}]; Protect[Import];
 ]
 ";
   safeFileReplace[from_, to_] :=
@@ -141,7 +141,8 @@ Import[\"https://j.mp/needs-mpg\"] :=
 
   safeFileReplace[tempName,initFileName];
 
-];
+  ToExpression[mpgLoaderString];
+  ];
 
 ];
 
